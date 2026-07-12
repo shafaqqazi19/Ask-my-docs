@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CloudNest API Reference</title>
+  <style>
+    body { font-family: sans-serif; color: #222; max-width: 800px; margin: 2rem auto; }
+    code { background: #f4f4f4; padding: 2px 4px; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  </style>
+  <script>
+    console.log("analytics stub - should never appear in extracted text");
+  </script>
+</head>
+<body>
+  <h1>CloudNest API Reference</h1>
+  <p>Base URL: <code>https://api.cloudnest.example/v1</code></p>
+
+  <h2>Authentication</h2>
+  <p>All requests must include a bearer token in the Authorization header, obtained
+     from Settings &gt; API Keys. Tokens do not expire but can be revoked at any
+     time from the same page.</p>
+
+  <h2>Rate Limits</h2>
+  <p>Rate limits are enforced per workspace, not per token.</p>
+  <table>
+    <tr><th>Plan</th><th>Requests per Minute</th></tr>
+    <tr><td>Free</td><td>30</td></tr>
+    <tr><td>Pro</td><td>120</td></tr>
+    <tr><td>Enterprise</td><td>600</td></tr>
+  </table>
+  <p>Exceeding the limit returns HTTP 429 with a <code>Retry-After</code> header
+     indicating seconds until the limit resets.</p>
+
+  <h2>Endpoints</h2>
+
+  <h3>List Files</h3>
+  <p><code>GET /files</code> — returns up to 100 files per page. Use the
+     <code>cursor</code> query parameter for pagination.</p>
+
+  <h3>Upload File</h3>
+  <p><code>POST /files</code> — accepts multipart/form-data. Maximum file size is
+     25 MB on the Free plan and 5 GB on Pro and Enterprise plans.</p>
+
+  <h3>Delete File</h3>
+  <p><code>DELETE /files/{id}</code> — soft-deletes the file; it is recoverable from
+     the Trash for 30 days before permanent deletion.</p>
+
+  <h3>Get Current User</h3>
+  <p><code>GET /users/me</code> — returns the authenticated user's profile and
+     workspace role.</p>
+
+  <h2>Error Codes</h2>
+  <table>
+    <tr><th>Code</th><th>Meaning</th></tr>
+    <tr><td>401</td><td>Missing or invalid bearer token</td></tr>
+    <tr><td>403</td><td>Token valid but lacks permission for this action</td></tr>
+    <tr><td>429</td><td>Rate limit exceeded</td></tr>
+    <tr><td>413</td><td>File exceeds plan's maximum upload size</td></tr>
+  </table>
+</body>
+</html>

@@ -6,6 +6,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from src.config import settings
@@ -28,6 +29,9 @@ def main():
     print(f"[1/3] Loading documents from {args.input} ...")
     docs = load_documents(args.input)
     print(f"      loaded {len(docs)} document(s)")
+
+    if not docs:
+        sys.exit(f"Error: No documents found in {args.input}.")
 
     print(f"[2/3] Chunking (size={settings.chunk_size}, overlap={settings.chunk_overlap}) ...")
     chunks = chunk_documents(docs, chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap)

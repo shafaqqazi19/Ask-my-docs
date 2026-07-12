@@ -7,8 +7,6 @@ __pycache__/
 storage/bm25_index/*.pkl
 storage/faiss_index/*.faiss
 storage/faiss_index/*.jsonl
-data/raw/*
-!data/raw/.gitkeep
 .pytest_cache/
 .coverage
 *.egg-info/

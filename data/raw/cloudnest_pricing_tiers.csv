@@ -1,0 +1,4 @@
+plan,monthly_price_usd,annual_price_usd,storage,max_users,support_level,max_upload_size
+Free,0,0,5 GB,1,Community forum only,25 MB
+Pro,15,150,500 GB,25,Standard (4 business hour response),5 GB
+Enterprise,49,490,Unlimited,Unlimited,Priority (1 hour response, 24/7),5 GB
