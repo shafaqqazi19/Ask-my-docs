@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What monthly uptime does CloudNest commit to in its SLA?",
+    "ground_truth": "CloudNest commits to 99.9% monthly uptime for the core platform, excluding scheduled maintenance windows announced at least 48 hours in advance."
+  },
+  {
+    "question": "What is the support response time for Enterprise customers?",
+    "ground_truth": "Enterprise customers receive priority support with a 1 hour response time, 24/7."
+  },
+  {
+    "question": "What service credit do I get if monthly uptime drops to 97%?",
+    "ground_truth": "A monthly uptime between 95.0% and 98.99% qualifies for a 25% service credit on monthly fees."
+  },
+  {
+    "question": "Are annual CloudNest plans refundable?",
+    "ground_truth": "Annual plans are refundable in full within 14 days of purchase if unused. Monthly plans are non-refundable but can be cancelled anytime, with access continuing until the end of the billing period."
+  },
+  {
+    "question": "How many team members can I invite on the Pro plan?",
+    "ground_truth": "The Pro plan allows up to 25 team members. Enterprise allows unlimited team members, and Free is limited to a single user."
+  },
+  {
+    "question": "How long does it take to set up the Slack integration?",
+    "ground_truth": "The Slack integration typically takes about 2 minutes to set up."
+  },
+  {
+    "question": "Is two-factor authentication required for CloudNest accounts?",
+    "ground_truth": "Two-factor authentication is optional but recommended for Free and Pro workspaces, and mandatory for all Enterprise workspace admins."
+  },
+  {
+    "question": "What is the CloudNest API base URL and how do I authenticate?",
+    "ground_truth": "The API base URL is https://api.cloudnest.example/v1. Requests must include a bearer token in the Authorization header, obtained from Settings > API Keys."
+  },
+  {
+    "question": "What is the API rate limit for the Pro plan?",
+    "ground_truth": "The Pro plan is rate limited to 120 requests per minute per workspace."
+  },
+  {
+    "question": "What HTTP status code is returned when the API rate limit is exceeded?",
+    "ground_truth": "HTTP 429 is returned when the rate limit is exceeded, along with a Retry-After header."
+  },
+  {
+    "question": "What is the maximum file upload size on the Free plan?",
+    "ground_truth": "The maximum file upload size on the Free plan is 25 MB per file."
+  },
+  {
+    "question": "How much storage does the Enterprise plan include and what does it cost monthly?",
+    "ground_truth": "The Enterprise plan includes unlimited storage and costs $49 per month (or $490 annually)."
+  },
+  {
+    "question": "How long are deleted files recoverable before permanent deletion?",
+    "ground_truth": "Deleted files move to Trash and are recoverable for 30 days before permanent deletion."
+  },
+  {
+    "question": "Do non-profits get a discount on CloudNest plans?",
+    "ground_truth": "Registered non-profits receive 20% off Pro and Enterprise annual plans."
+  },
+  {
+    "question": "How do I reset my CloudNest password and how long is the reset link valid?",
+    "ground_truth": "Use the 'Forgot password' link on the login page to receive a reset email. The reset link expires after 60 minutes."
+  }
+]

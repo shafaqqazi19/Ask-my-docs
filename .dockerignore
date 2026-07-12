@@ -1,0 +1,25 @@
+# Version control
+.git
+.github
+
+# Python
+.venv
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# Frontend build artifacts (rebuilt inside Docker)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Test/eval assets — not needed at runtime
+tests/
+eval/
+
+# Secrets — never bake into image
+.env
+.env.*
+*.db

@@ -1,0 +1,127 @@
+# =============================================================================
+# Docker Compose — Local Development
+# =============================================================================
+# Usage:
+#   docker compose up --build          # build and start everything
+#   docker compose up -d               # start in background
+#   docker compose logs -f app         # follow app logs
+#   docker compose down                # stop (data persists in pgdata volume)
+#   docker compose down -v             # stop AND delete database volume
+#
+# Architecture:
+#   postgres (port 5432)  ──► app (FastAPI :8001 + Next.js :7860)
+#
+# The `app` container runs both FastAPI and Next.js via supervisord.
+# Process chain: tini -> supervisord -> {uvicorn, node server.js}
+# =============================================================================
+
+services:
+  # ─── PostgreSQL ────────────────────────────────────────────────────────────
+  # Local development database for query logging. Uses a named volume (pgdata)
+  # so data survives `docker compose down` restarts. Only deleted with `down -v`.
+  #
+  # Credentials come from .env via the POSTGRES_USER / POSTGRES_PASSWORD /
+  # POSTGRES_DB variables. The DATABASE_URL in the app service must match.
+  #
+  # Exposed on host port 5432 so you can connect with psql, DBeaver, etc.:
+  #   psql -h localhost -p 5432 -U raguser -d askmydocs
+  postgres:
+    image: postgres:16-alpine
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_INITDB_ARGS: "-c password_encryption=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── Application (FastAPI + Next.js) ──────────────────────────────────────
+  # Single container running both services via supervisord:
+  #   - FastAPI on internal port 8001 (set by API_PORT env var)
+  #   - Next.js on port 7860 (set by PORT env var, required by HF Spaces)
+  #
+  # The container image is built from the multi-stage Dockerfile at the repo
+  # root. Build stages are cached, so rebuilds after code changes are fast
+  # (only the final stage + COPY src/ needs to re-run).
+  #
+  # Bind mounts for data/ and storage/ let you edit documents and see index
+  # changes without rebuilding the image. The ingestion step (either the
+  # one-off `docker compose run ingestion` or the /upload API endpoint)
+  # writes indexes to storage/ which the app reads at startup.
+  #
+  # Access:
+  #   Frontend UI:  http://localhost:7860
+  #   API docs:     http://localhost:7860/docs   (Swagger UI not available —
+  #                 API is internal, docs at http://localhost:8001/docs if
+  #                 you expose the port)
+  #   Health:       http://localhost:8001/health
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BACKEND_URL: http://localhost:8001
+        NEXT_PUBLIC_API_URL: /api
+    ports:
+      - "7860:7860"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      API_HOST: 0.0.0.0
+      API_PORT: 8001
+      PORT: 7860
+      HOSTNAME: 0.0.0.0
+      CORS_ALLOWED_ORIGINS: http://localhost:7860,http://localhost:3000
+      BACKEND_URL: http://localhost:8001
+      LOG_QUERIES: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./storage:/app/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ─── Document ingestion (one-off) ─────────────────────────────────────────
+  # Runs once, builds BM25 + FAISS indexes from data/raw/, then exits.
+  # Start manually after adding documents:
+  #   docker compose run --rm ingestion
+  #
+  # This reuses the same image as `app` (same Dockerfile) but overrides the
+  # CMD to run the ingestion script instead of supervisord. The bind mounts
+  # on data/ and storage/ mean the indexes are written to your host filesystem
+  # and immediately available to the `app` container.
+  ingestion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    working_dir: /app
+    entrypoint: ["python", "scripts/ingest_docs.py", "--input", "data/raw", "--output", "storage"]
+    command: []
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./storage:/app/storage
+    profiles:
+      - tools
+
+volumes:
+  pgdata:
