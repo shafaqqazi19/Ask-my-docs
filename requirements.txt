@@ -27,6 +27,7 @@ psycopg[binary]>=3.1.19
 # --- API ---
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
 
 # --- evaluation ---
 ragas>=0.1.9

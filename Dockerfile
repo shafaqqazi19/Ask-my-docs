@@ -19,7 +19,7 @@
 FROM node:18-slim AS frontend-deps
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci --omit=dev
+RUN npm ci
 
 # ─── Stage 2: Build Next.js in production mode ──────────────────────────────
 # standalone output produces a self-contained server.js (~59MB) instead of the
@@ -42,7 +42,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --break-system-packages torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 # ─── Stage 4: Production image ──────────────────────────────────────────────
 FROM python:3.11-slim AS production
@@ -56,10 +57,10 @@ RUN apt-get update && \
 COPY --from=python-deps /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# --- Copy Node.js runtime from frontend-deps stage ---
-# Both stages use Debian (glibc), so the binary and native modules are compatible.
+# --- Copy Node.js binary from frontend-deps stage ---
+# python:3.11-slim doesn't include Node.js; copy it from the Node stage.
+# standalone output is self-contained — no node_modules needed in production.
 COPY --from=frontend-deps /usr/local/bin/node /usr/local/bin/node
-COPY --from=frontend-deps /app/frontend/node_modules /app/frontend/node_modules
 
 # --- Copy built Next.js from frontend-build stage ---
 COPY --from=frontend-build /app/frontend/.next/standalone /app/frontend/
@@ -82,7 +83,7 @@ ENV API_HOST=0.0.0.0
 ENV API_PORT=8001
 
 # --- Install supervisord to manage both processes ---
-RUN pip install --no-cache-dir supervisor
+RUN pip install --no-cache-dir --break-system-packages supervisor
 
 # --- Supervisor configuration ---
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -97,4 +98,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
     CMD curl -f http://localhost:8001/health && curl -s -o /dev/null -w "%{http_code}" http://localhost:7860/ | grep -q 200 || exit 1
 
 ENTRYPOINT ["tini", "--"]
-CMD ["/usr/local/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/opt/venv/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
